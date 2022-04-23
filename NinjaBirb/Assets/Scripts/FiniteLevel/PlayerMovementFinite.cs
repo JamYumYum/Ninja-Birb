@@ -10,6 +10,7 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
 
     private float DashDuration = 0.12f;
     private bool IsDashing = false;
+    private bool IsBouncing = false;
 
     public int airdashAmount = 0;
     public int maxAirdashAmount = 1;
@@ -17,6 +18,7 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
     public float dashDuration { get => DashDuration; set => DashDuration = value; }
 
     public bool isDashing { get => IsDashing; set => IsDashing = value; }
+    public bool isBouncing { get => IsBouncing; set => IsBouncing = value; }
 
     public float bounceIntensity = 10f;
 
@@ -24,6 +26,10 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
 
 
     private CharacterController controller;
+    private Animator animator;
+
+    public event EventHandler On_Dashing;
+    public event EventHandler On_DashEnd;
 
     public void Dash(Vector2 direction, float intensity)
     {
@@ -37,6 +43,7 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
             }
             else return;
         }
+        if (timeoutDashCo != null) StopCoroutine(timeoutDashCo);
         
         //check downtap while grounded
         if (controller.IsGrounded && (direction.y < 0))
@@ -52,12 +59,13 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
         }
 
         //normal dash 
-        if (timeoutDashCo != null) StopCoroutine(timeoutDashCo);
         timeoutDashCo = StartCoroutine(TimeoutDash());
 
         controller.UseGravity(false);
         controller.SetVelocity(direction.normalized, (intensity <= 0.16f? 3*0.16f : (3f*intensity<=1? 3f*intensity : 1)) *intensityScale);
         isDashing = true;
+        animator?.SetBool("isDashing", true);
+        On_Dashing?.Invoke(this, EventArgs.Empty);
 
         Debug.Log(intensity);
     }
@@ -71,12 +79,15 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
         //controller.SetVelocity(Vector2.zero, 0f);
         controller.ScaleVelocity(0.05f);
         isDashing = false;
+        animator?.SetBool("isDashing", false);
+        On_DashEnd?.Invoke(this, EventArgs.Empty);
     }
 
     private void Bounce(Vector2 inDirection, Vector2 inNormal, float intensity)
     {
         controller.SetVelocity(Vector2.Reflect(inDirection, inNormal).normalized, intensity);
         airdashAmount = maxAirdashAmount;
+        isBouncing = true;
     }
 
     IEnumerator TimeoutDash()
@@ -90,6 +101,9 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
     {
         controller = GetComponent<CharacterController>();
         controller.OnLanding += controller_OnLanding;
+
+        animator = GetComponentInChildren<Animator>();
+        
     }
 
     // Update is called once per frame
@@ -111,12 +125,13 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
         {
             DashEnd();
             Bounce(collision.relativeVelocity * -1, collision.GetContact(0).normal* -1, bounceIntensity);
-            
+            return;
         }
         else if (controller.IsGrounded)
         {
             controller.ScaleVelocity(0.2f);
         }
+        isBouncing = false;
 
         
     }
