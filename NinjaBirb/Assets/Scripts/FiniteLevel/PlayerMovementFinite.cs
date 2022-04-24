@@ -5,10 +5,10 @@ using System;
 
 public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
 {
-    public float intensityScale = 100f;
+    public float intensityScale = 50f;
     Coroutine timeoutDashCo;
 
-    private float DashDuration = 0.12f;
+    private float DashDuration = 0.2f;
     private bool IsDashing = false;
     private bool IsBouncing = false;
 
@@ -79,6 +79,7 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
         //controller.SetVelocity(Vector2.zero, 0f);
         controller.ScaleVelocity(0.05f);
         isDashing = false;
+        isBouncing = false;
         animator?.SetBool("isDashing", false);
         On_DashEnd?.Invoke(this, EventArgs.Empty);
     }

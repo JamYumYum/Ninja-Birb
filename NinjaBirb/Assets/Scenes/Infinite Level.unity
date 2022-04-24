@@ -2319,7 +2319,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52166ef929b3806459edfda65f91fdd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  intensityScale: 50
+  intensityScale: 30
   airdashAmount: 0
   maxAirdashAmount: 1
   bounceIntensity: 15
@@ -3896,6 +3896,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   afterimageInterval: 0.05
+  startPoolSize: 40
 --- !u!1 &2068146764
 GameObject:
   m_ObjectHideFlags: 0
