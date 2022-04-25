@@ -14,7 +14,7 @@ public class AfterimageEffect : MonoBehaviour
     private Transform thisTransform;
 
 
-    public float afterimageInterval = 0.05f;
+    public float afterimageInterval = 0.1f;
     private float afterimageTimer = 0f;
 
     public int startPoolSize = 40;
@@ -72,6 +72,7 @@ public class AfterimageEffect : MonoBehaviour
             if (afterimageTimer >= afterimageInterval || afterimageTimer == 0f)
             {
                 CreateAfterimage();
+                afterimageTimer -= afterimageInterval;
             }
             afterimageTimer += Time.fixedDeltaTime;
         }

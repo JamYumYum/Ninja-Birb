@@ -33,6 +33,7 @@ public class Afterimage : MonoBehaviour
         localPosY = 0f;
         currentLifeTime = 0f;
         spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, (startAlpha) / 255);
+        spriteRenderer.sprite = sourceRenderer.sprite;
     }
 
 
@@ -45,7 +46,7 @@ public class Afterimage : MonoBehaviour
             gameObject.SetActive(false);
             return;
         }
-        spriteRenderer.sprite = sourceRenderer.sprite;
+        
         Color color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b,
             spriteRenderer.color.a - ((Time.deltaTime / imageDuration) * (startAlpha - endAlpha)/255));
         spriteRenderer.color = color;

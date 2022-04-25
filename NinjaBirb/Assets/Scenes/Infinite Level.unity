@@ -3895,8 +3895,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cedf909ebad43784a9a984d2d4ebfedc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  afterimageInterval: 0.05
-  startPoolSize: 40
+  afterimageInterval: 0.06
+  startPoolSize: 10
 --- !u!1 &2068146764
 GameObject:
   m_ObjectHideFlags: 0
