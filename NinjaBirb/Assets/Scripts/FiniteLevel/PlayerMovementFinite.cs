@@ -30,6 +30,8 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
 
     public event EventHandler On_Dashing;
     public event EventHandler On_DashEnd;
+    public event EventHandler On_Bouncing;
+    public event EventHandler On_BounceEnd;
 
     public void Dash(Vector2 direction, float intensity)
     {
@@ -89,6 +91,7 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
         controller.SetVelocity(Vector2.Reflect(inDirection, inNormal).normalized, intensity);
         airdashAmount = maxAirdashAmount;
         isBouncing = true;
+        On_Bouncing?.Invoke(this, EventArgs.Empty);
     }
 
     IEnumerator TimeoutDash()
@@ -133,6 +136,7 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
             controller.ScaleVelocity(0.2f);
         }
         isBouncing = false;
+        On_BounceEnd?.Invoke(this, EventArgs.Empty);
 
         
     }
