@@ -13,7 +13,8 @@ public class PlayerMovementInfinite : MonoBehaviour, IPlayerMovement
     public float dashDuration { get => DashDuration; set => DashDuration = value; }
 
     public bool isDashing { get => IsDashing; set => IsDashing = value; }
-
+    public float bounceLockDuration { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+    public bool bounceLock { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
     private CharacterController controller;
 

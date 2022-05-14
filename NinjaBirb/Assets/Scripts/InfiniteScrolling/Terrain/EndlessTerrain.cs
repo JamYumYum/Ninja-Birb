@@ -10,185 +10,127 @@ public class EndlessTerrain : MonoBehaviour
     [Tooltip("Amount of tiles in a Tilemap per column")]
     public int height = 14;
 
-    
-    
-
-    private int offsetT1X; //Offsets determine the end position of a Tilemap
-    private int offsetT1Y;
-    private int offsetT2X;
-    private int offsetT2Y;
-
-    
-
     private TilesManager tManager;
-
-    //Grid and Tilemaps with all need components
     private GameObject Grid;
-    private GameObject TMap1;
-    private GameObject TMap2;
     private Grid grid;
-    private Tilemap tMap1;
-    private Tilemap tMap2;
-    private TilemapRenderer tMRenderer1;
-    private TilemapRenderer tMRenderer2;
-    private TilemapCollider2D tMCollider1;
-    private TilemapCollider2D tMCollider2;
-    private TilemapContentManager t1Manager;
-    private TilemapContentManager t2Manager;
-    
+    private Tmap Tmap1;
+    private Tmap Tmap2;
+    private Tmap Tmap3;
+    private Queue<Tmap> tmapsOrder;
     private Rigidbody2D rb;
     private ControllerEventSubscriber controllerSubscription;
 
-    public Tilemap getTmap1 { get => tMap1; }
-    public Tilemap getTmap2 { get => tMap2; }
-
-    public GameObject getT1 { get => TMap1; }
-    public GameObject getT2 { get => TMap2; }
-
+    public Tilemap getTmap1 { get => Tmap1.tilemap; }
+    public Tilemap getTmap2 { get => Tmap2.tilemap; }
+    public Tilemap getTmap3 { get => Tmap3.tilemap; }
+    public GameObject getT1 { get => Tmap1.gameObject; }
+    public GameObject getT2 { get => Tmap2.gameObject; }
+    public GameObject getT3 { get => Tmap3.gameObject; }
     public GameObject getGrid { get => Grid; }
     
 
     private void Awake()
     {
-        Grid = new GameObject("Grid for Tmap");
-        TMap1 = new GameObject("TMap1");
-        TMap2 = new GameObject("TMap2");
-
-        TMap1.transform.SetParent(Grid.transform);
-        TMap2.transform.SetParent(Grid.transform);
-
         tManager = GetComponent<TilesManager>();
 
+        Grid = new GameObject("Grid for Tmap");
+        Tmap1 = new Tmap("TMap1", tManager, width, height);
+        Tmap2 = new Tmap("TMap2", tManager, width, height);
+        Tmap3 = new Tmap("TMap3", tManager, width, height);
+        tmapsOrder = new Queue<Tmap>();
+        tmapsOrder.Enqueue(Tmap3);  // starting order:   (left)Tmap3 -> (middle)Tmap1 -> (right)Tmap2
+        tmapsOrder.Enqueue(Tmap1);  // Player starting in Tmap1
+        tmapsOrder.Enqueue(Tmap2);
+
+        Tmap1.gameObject.transform.SetParent(Grid.transform);
+        Tmap2.gameObject.transform.SetParent(Grid.transform);
+        Tmap3.gameObject.transform.SetParent(Grid.transform);
+
+
         grid = Grid.AddComponent<Grid>();
-        tMap1 = TMap1.AddComponent<Tilemap>();
-        tMap2 = TMap2.AddComponent<Tilemap>();
-        tMRenderer1 = TMap1.AddComponent<TilemapRenderer>();
-        tMRenderer2 = TMap2.AddComponent<TilemapRenderer>();
-        tMCollider1 = TMap1.AddComponent<TilemapCollider2D>();
-        tMCollider2 = TMap2.AddComponent<TilemapCollider2D>();
         rb = Grid.AddComponent<Rigidbody2D>();
         controllerSubscription = Grid.AddComponent<ControllerEventSubscriber>();
 
         rb.gravityScale = 0f;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-        Physics2D.IgnoreCollision(tMCollider1, tMCollider2);
+        Physics2D.IgnoreCollision(Tmap1.tilemapCollider, Tmap2.tilemapCollider);
+        Physics2D.IgnoreCollision(Tmap1.tilemapCollider, Tmap3.tilemapCollider);
+        Physics2D.IgnoreCollision(Tmap3.tilemapCollider, Tmap2.tilemapCollider);
 
-        TMap1.layer = LayerMask.NameToLayer("Ground");
-        TMap2.layer = LayerMask.NameToLayer("Ground");
-
-        TMap2.transform.localPosition = new Vector3(width, 0, 0);
-
-        t1Manager = new TilemapContentManager(tMap1, tManager, width, height);
-        t2Manager = new TilemapContentManager(tMap2, tManager, width, height);
-
-        
+        Tmap2.gameObject.transform.localPosition = new Vector3(width, 0, 0);
+        Tmap3.gameObject.transform.localPosition = new Vector3(-width, 0, 0);
     }
 
 
     // Start is called before the first frame update
     void Start()
     {
-        /*
-        GenerateDefaultTilemap(tMap1, 0, 0);
-        GenerateDefaultTilemap(tMap2, 0, 0);
+        Tmap1.contentManager.AddFloor();
+        Tmap1.contentManager.AddRandomPillar((int)width/2);
+        Tmap1.contentManager.AddCeiling();
 
-        //testing
-        FillBreakableTest(tMap1, 0, 0);
-        FillBreakableTest(tMap2, 0, 0);
+        Tmap2.contentManager.AddFloor();
+        Tmap2.contentManager.AddCeiling();
+        Tmap2.contentManager.AddRandomPillar();
 
-        FillGravityUpTest(tMap1, 0, 0);
-        */
-        t1Manager.AddFloor();
-        t1Manager.AddRandomPillar((int)width/2);
-        t1Manager.AddCeiling();
-        t2Manager.AddFloor();
-        t2Manager.AddCeiling();
-        t2Manager.AddRandomPillar();
-        
+        Tmap3.contentManager.AddFloor();
+        Tmap3.contentManager.AddCeiling();
+        Tmap3.contentManager.AddRandomPillar();
+
     }
 
     // Update is called once per frame
     void Update()
     {
         ScrollTilemap();
-        
     }
 
 
     void ScrollTilemap()
     {
-        if(Grid.transform.position.x < -width && TMap1.transform.localPosition.x == 0)
+        if(Grid.transform.position.x < -width)
         {
+            Tmap leftTmap = tmapsOrder.Dequeue();
+            Tmap middleTmap = tmapsOrder.Dequeue();
+            Tmap rightTmap = tmapsOrder.Dequeue();
+            // scrolled: newLeft = middle, newMiddle = right, newRight = left
+            tmapsOrder.Enqueue(middleTmap);
+            tmapsOrder.Enqueue(rightTmap);
+            tmapsOrder.Enqueue(leftTmap);
+
             Grid.transform.position = new Vector3(0, Grid.transform.position.y, Grid.transform.position.z);
-            TMap2.transform.localPosition = new Vector3(TMap2.transform.localPosition.x - width, TMap2.transform.localPosition.y, TMap2.transform.localPosition.z);
-            TMap1.transform.localPosition = new Vector3(TMap1.transform.localPosition.x + width, TMap1.transform.localPosition.y, TMap1.transform.localPosition.z);
+            leftTmap.gameObject.transform.localPosition = new Vector3(leftTmap.gameObject.transform.localPosition.x + 2*width, 
+                leftTmap.gameObject.transform.localPosition.y, leftTmap.gameObject.transform.localPosition.z);
+            middleTmap.gameObject.transform.localPosition = new Vector3(middleTmap.gameObject.transform.localPosition.x - width,
+                middleTmap.gameObject.transform.localPosition.y, middleTmap.gameObject.transform.localPosition.z);
+            rightTmap.gameObject.transform.localPosition = new Vector3(rightTmap.gameObject.transform.localPosition.x - width,
+                rightTmap.gameObject.transform.localPosition.y, rightTmap.gameObject.transform.localPosition.z);
 
-            t1Manager.ResetContent();
-            t1Manager.AddFloor();
-            t1Manager.AddCeiling();
-            t1Manager.AddRandomPillar();
+            //generate new content for new right Tmap
+            leftTmap.contentManager.ResetContent();
+            leftTmap.contentManager.AddFloor();
+            leftTmap.contentManager.AddCeiling();
+            leftTmap.contentManager.AddRandomPillar();
         }
-
-        if(Grid.transform.position.x < -width && TMap1.transform.localPosition.x != 0)
-        {
-            Grid.transform.position = new Vector3(0, Grid.transform.position.y, Grid.transform.position.z);
-            TMap1.transform.localPosition = new Vector3(0, TMap1.transform.localPosition.y, TMap1.transform.localPosition.z);
-            TMap2.transform.localPosition = new Vector3(width, TMap2.transform.localPosition.y, TMap2.transform.localPosition.z);
-
-            t2Manager.ResetContent();
-            t2Manager.AddFloor();
-            t2Manager.AddCeiling();
-            t2Manager.AddRandomPillar();
-        }
-
-
     }
 
-
-    void GenerateDefaultTilemap(Tilemap tilemap, int offsetX, int offsetY)
+    private class Tmap
     {
-        for(int i = -Mathf.RoundToInt(width/4); i < Mathf.RoundToInt(3*width/4); i++)
+        public GameObject gameObject;
+        public Tilemap tilemap;
+        public TilemapRenderer tilemapRenderer;
+        public TilemapCollider2D tilemapCollider;
+        public TilemapContentManager contentManager;
+        public Tmap(string name, TilesManager tilesManager, int width, int height)
         {
-            tilemap.SetTile(new Vector3Int(i + offsetX, -Mathf.RoundToInt(height / 2) + offsetY, 0), tManager.tiles[0]);
-            tilemap.SetTile(new Vector3Int(i + offsetX, Mathf.RoundToInt(height / 2) - 1 + offsetY, 0), tManager.tiles[0]);
+            gameObject = new GameObject(name);
+            tilemap = gameObject.AddComponent<Tilemap>();
+            tilemapRenderer = gameObject.AddComponent<TilemapRenderer>();
+            tilemapCollider = gameObject.AddComponent<TilemapCollider2D>();
+            contentManager = new TilemapContentManager(tilemap, tilesManager, width, height);
 
-            //tilemap.transform.localPosition = new Vector3()
-            //tilemap.SetTile(new Vector3Int(i, 1, 0), tManager.tiles[0]);
-            //Debug.Log(i);
+            gameObject.layer = LayerMask.NameToLayer("Ground");
         }
     }
-
-    void FillBreakableTest(Tilemap tilemap, int offsetX, int offsetY)
-    {
-        for (int i = -Mathf.RoundToInt(width / 4); i < Mathf.RoundToInt(3 * width / 4); i++)
-        {
-            tilemap.SetTile(new Vector3Int(i + offsetX, -Mathf.RoundToInt(height / 2) + offsetY + 2, 0), tManager.tiles[1]);
-            tilemap.SetTile(new Vector3Int(i + offsetX, Mathf.RoundToInt(height / 2) - 1 + offsetY -2, 0), tManager.tiles[1]);
-
-            //tilemap.transform.localPosition = new Vector3()
-            //tilemap.SetTile(new Vector3Int(i, 1, 0), tManager.tiles[0]);
-            //Debug.Log(i);
-        }
-    }
-
-    void FillGravityUpTest(Tilemap tilemap, int offsetX, int offsetY)
-    {
-        for (int i = -Mathf.RoundToInt(width / 4); i < Mathf.RoundToInt(3 * width / 4); i++)
-        {
-            tilemap.SetTile(new Vector3Int(i + offsetX, -Mathf.RoundToInt(height / 2) + offsetY + 1, 0), tManager.tiles[2]);
-            tilemap.SetTile(new Vector3Int(i + offsetX, Mathf.RoundToInt(height / 2) - 1 + offsetY - 1, 0), tManager.tiles[3]);
-
-            //tilemap.transform.localPosition = new Vector3()
-            //tilemap.SetTile(new Vector3Int(i, 1, 0), tManager.tiles[0]);
-            //Debug.Log(i);
-        }
-    }
-
-
-
-
-
-
-
 }

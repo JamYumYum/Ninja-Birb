@@ -43,7 +43,7 @@ public class PlayerInput : MonoBehaviour
         {
             if (!EventSystem.current.IsPointerOverGameObject())
             {
-                if (!player.isDashing)
+                if (!player.isDashing && !player.bounceLock)
                 {
                     Vector3 mousePos = Input.mousePosition;
                     Vector2 direction = new Vector2(mousePos.x - posX, mousePos.y - posY);

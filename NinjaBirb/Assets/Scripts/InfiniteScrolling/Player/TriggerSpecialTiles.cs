@@ -8,8 +8,10 @@ public class TriggerSpecialTiles : MonoBehaviour
     private EndlessTerrain endless;
     private GameObject t1;
     private GameObject t2;
+    private GameObject t3;
     private Tilemap tilemap1;
     private Tilemap tilemap2;
+    private Tilemap tilemap3;
     private CharacterController controller;
 
     //SpecialSpaceTile, which the player currently/last time is/was in
@@ -24,9 +26,11 @@ public class TriggerSpecialTiles : MonoBehaviour
         {
             t1 = endless.getT1;
             t2 = endless.getT2;
+            t3 = endless.getT3;
 
             tilemap1 = endless.getTmap1;
             tilemap2 = endless.getTmap2;
+            tilemap3 = endless.getTmap3;
 
         }
 
@@ -42,6 +46,7 @@ public class TriggerSpecialTiles : MonoBehaviour
     {
         ISpecialSpaceTile tileInT1 = tilemap1.GetTile(tilemap1.WorldToCell(Vector3Int.zero)) as ISpecialSpaceTile;
         ISpecialSpaceTile tileInT2 = tilemap2.GetTile(tilemap2.WorldToCell(Vector3Int.zero)) as ISpecialSpaceTile;
+        ISpecialSpaceTile tileInT3 = tilemap3.GetTile(tilemap2.WorldToCell(Vector3Int.zero)) as ISpecialSpaceTile;
         lastTile = currentTile;
         if (tileInT1 != null)
         {
@@ -50,6 +55,10 @@ public class TriggerSpecialTiles : MonoBehaviour
         else if (tileInT2 != null)
         {
             currentTile = tileInT2;
+        }
+        else if (tileInT3 != null)
+        {
+            currentTile = tileInT3;
         }
         else
         {
@@ -96,6 +105,7 @@ public class TriggerSpecialTiles : MonoBehaviour
         Vector3 hitPosition = Vector3.zero;
         if (collision.GetContact(0).collider.gameObject == t1) tilemap = tilemap1;
         else if (collision.GetContact(0).collider.gameObject == t2) tilemap = tilemap2;
+        else if (collision.GetContact(0).collider.gameObject == t3) tilemap = tilemap3;
         else tilemap = null;
 
         if (tilemap != null)

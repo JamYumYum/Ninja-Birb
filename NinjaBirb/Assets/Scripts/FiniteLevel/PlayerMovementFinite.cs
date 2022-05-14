@@ -7,18 +7,23 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
 {
     public float intensityScale = 50f;
     Coroutine timeoutDashCo;
+    Coroutine bounceLockCo;
 
     private float DashDuration = 0.2f;
+    private float BounceLockDuration = 0.15f;
     private bool IsDashing = false;
     private bool IsBouncing = false;
+    private bool BounceLock = false;
 
     public int airdashAmount = 0;
     public int maxAirdashAmount = 1;
 
     public float dashDuration { get => DashDuration; set => DashDuration = value; }
+    public float bounceLockDuration { get => BounceLockDuration; set => BounceLockDuration = value; }
 
     public bool isDashing { get => IsDashing; set => IsDashing = value; }
     public bool isBouncing { get => IsBouncing; set => IsBouncing = value; }
+    public bool bounceLock { get => BounceLock; set => BounceLock = value; }
 
     public float bounceIntensity = 10f;
 
@@ -88,6 +93,9 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
 
     private void Bounce(Vector2 inDirection, Vector2 inNormal, float intensity)
     {
+        bounceLock = true;
+        if (bounceLockCo != null) StopCoroutine(bounceLockCo);
+        bounceLockCo = StartCoroutine(TimeoutBounceLock());
         controller.SetVelocity(Vector2.Reflect(inDirection, inNormal).normalized, intensity);
         airdashAmount = maxAirdashAmount;
         isBouncing = true;
@@ -98,6 +106,12 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
     {
         yield return new WaitForSeconds(dashDuration);
         DashEnd();
+    }
+
+    IEnumerator TimeoutBounceLock()
+    {
+        yield return new WaitForSeconds(bounceLockDuration);
+        bounceLock = false;
     }
 
     // Start is called before the first frame update
@@ -136,6 +150,8 @@ public class PlayerMovementFinite : MonoBehaviour, IPlayerMovement
             controller.ScaleVelocity(0.2f);
         }
         isBouncing = false;
+        if (bounceLockCo != null) StopCoroutine(bounceLockCo);
+        bounceLock = false;
         On_BounceEnd?.Invoke(this, EventArgs.Empty);
 
         
