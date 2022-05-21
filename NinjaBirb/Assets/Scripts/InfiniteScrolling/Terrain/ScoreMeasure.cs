@@ -9,28 +9,26 @@ public class ScoreMeasure : MonoBehaviour, IMeasureScore
 
     private float distanceTravelled = 0f;
 
-    private EndlessTerrain endless;
-    private Rigidbody2D rb;
+    private EndlessTerrain world;
     
 
     // Start is called before the first frame update
     void Start()
     {
-        endless = GetComponent<EndlessTerrain>();
-        rb = endless.getGrid.GetComponent<Rigidbody2D>();
-        
+        world = GetComponent<EndlessTerrain>();
+        world.On_world_shift += On_world_shift_action;
     }
 
     // Update is called once per frame
     void Update()
     {
         
-        Score = distanceTravelled;
+        Score = distanceTravelled - world.getGrid.transform.position.x;
         
     }
 
-    void FixedUpdate()
+    void On_world_shift_action(object sender, EndlessTerrain.On_world_shift_args args)
     {
-        distanceTravelled -= rb.velocity.x*Time.fixedDeltaTime;
+        distanceTravelled += args.distanceX;
     }
 }

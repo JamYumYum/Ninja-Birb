@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System;
 
 public class EndlessTerrain : MonoBehaviour
 {
@@ -27,7 +28,13 @@ public class EndlessTerrain : MonoBehaviour
     public GameObject getT2 { get => Tmap2.gameObject; }
     public GameObject getT3 { get => Tmap3.gameObject; }
     public GameObject getGrid { get => Grid; }
-    
+    public Rigidbody2D getWorldRb { get => rb; }
+
+    public event EventHandler<On_world_shift_args> On_world_shift;
+    public class On_world_shift_args : EventArgs
+    {
+        public float distanceX;
+    }
 
     private void Awake()
     {
@@ -99,7 +106,10 @@ public class EndlessTerrain : MonoBehaviour
             tmapsOrder.Enqueue(rightTmap);
             tmapsOrder.Enqueue(leftTmap);
 
+            float lastPositionX = Grid.transform.position.x;
             Grid.transform.position = new Vector3(0, Grid.transform.position.y, Grid.transform.position.z);
+            On_world_shift?.Invoke(this, new On_world_shift_args { distanceX = 0 - lastPositionX});
+
             leftTmap.gameObject.transform.localPosition = new Vector3(leftTmap.gameObject.transform.localPosition.x + 2*width, 
                 leftTmap.gameObject.transform.localPosition.y, leftTmap.gameObject.transform.localPosition.z);
             middleTmap.gameObject.transform.localPosition = new Vector3(middleTmap.gameObject.transform.localPosition.x - width,
